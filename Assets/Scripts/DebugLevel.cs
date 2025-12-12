@@ -1,55 +1,62 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Necesario para leer tus teclas nuevas
+using UnityEngine.InputSystem; // ⚠️ VITAL: Sin esto no funciona el sistema nuevo
 
 public class DebugLevel : MonoBehaviour
 {
-    [Header("Referencias")]
-    public LanzadorArma lanzador;       // Tu script de disparo
-    public InputActionAsset inputAsset; // El archivo azul del rayo (InputSystem)
+    [Header("Conexiones")]
+    public LanzadorArma lanzador;       // Referencia al script que dispara para poder modificarlo
+    public InputActionAsset inputAsset; // El archivo azul (Input Actions) donde definimos las teclas
     
-    [Header("Arma de Regalo (Tecla 2)")]
-    public GameObject prefabArmaNueva;  // El arma que te dará el truco (ej: Hacha)
+    [Header("Configuración de Trucos")]
+    public GameObject prefabArmaNueva;  // El arma que daremos al pulsar la tecla (ej: Hacha)
 
-    // Variables internas para las teclas
+    // VARIABLES DE CONTROL (Input System)
+    // Guardamos las "Acciones" específicas para saber cuándo se pulsan
     private InputAction subirNivelAction;
     private InputAction darArmaAction;
 
     void Awake()
     {
-        // 1. Buscamos el mapa de controles "Player" (el que sale a la izquierda en tu foto)
+        // 1. INICIALIZACIÓN DEL INPUT SYSTEM
+        // Primero buscamos el "Mapa" de controles llamado "Player" dentro del archivo
         var actionMap = inputAsset.FindActionMap("Player");
         
-        // 2. Buscamos las acciones exactas que escribiste
-        subirNivelAction = actionMap.FindAction("DebugLevelUp");
-        darArmaAction = actionMap.FindAction("DebugGiveWeapon");
+        // 2. Buscamos las acciones por su nombre exacto (tal cual las escribimos en el editor)
+        subirNivelAction = actionMap.FindAction("DebugLevelUp");    // Tecla 1
+        darArmaAction = actionMap.FindAction("DebugGiveWeapon");    // Tecla 2
     }
 
+    // OnEnable y OnDisable son OBLIGATORIOS cuando usas Input System por código.
+    // Tienes que "encender" y "apagar" la escucha de teclas para evitar errores de memoria.
     void OnEnable()
     {
-        // Encendemos la escucha de teclas
+        // Encendemos las orejas (Empezamos a escuchar)
         subirNivelAction.Enable();
         darArmaAction.Enable();
 
-        // Les decimos qué hacer cuando las pulses
+        // SUSCRIPCIÓN A EVENTOS (El momento clave)
+        // Le decimos: "Cuando esta acción sea 'performed' (realizada), ejecuta esta función".
+        // La sintaxis '+= Context =>' es una expresión Lambda para conectar el evento.
         subirNivelAction.performed += Context => SubirNivel();
         darArmaAction.performed += Context => DarNuevaArma();
     }
 
     void OnDisable()
     {
-        // Apagamos la escucha si el objeto se desactiva
+        // Apagamos las orejas cuando el objeto se desactiva (limpieza)
         subirNivelAction.Disable();
         darArmaAction.Disable();
     }
 
-    // --- FUNCIONES DE LOS TRUCOS ---
+    // --- LÓGICA DE LOS TRUCOS ---
 
     void SubirNivel()
     {
+        // Comprobamos que tenemos la referencia para no generar errores (NullCheck)
         if(lanzador != null)
         {
-            lanzador.level++; // Suma 1 al nivel actual
-            Debug.Log($"⚡ TRUCO: ¡Nivel Subido! Ahora es Nivel {lanzador.level}");
+            lanzador.level++; // Accedemos a la variable pública 'level' y la subimos
+            Debug.Log($"⚡ TRUCO ACTIVADO: Nivel subido a {lanzador.level}");
         }
     }
 
@@ -57,9 +64,9 @@ public class DebugLevel : MonoBehaviour
     {
         if(lanzador != null && prefabArmaNueva != null)
         {
-            // Cambiamos el arma actual por la nueva (ej: cambia Bumerán por Hacha)
+            // Intercambiamos el prefab del arma en tiempo real
             lanzador.armaPrefab = prefabArmaNueva;
-            Debug.Log("🎁 TRUCO: ¡Arma cambiada por " + prefabArmaNueva.name + "!");
+            Debug.Log("🎁 TRUCO ACTIVADO: ¡Has recibido el " + prefabArmaNueva.name + "!");
         }
     }
 }
